@@ -1,0 +1,81 @@
+import os
+import datetime
+import numpy as np
+from example_rd import get_rd_data
+from SINDy_utils import library_size
+from training import train_network
+import torch
+
+training_data, validation_data, test_data = get_rd_data()
+
+params = {}
+
+params['input_dim'] = training_data['y1'].size*training_data['y2'].size
+params['latent_dim'] = 2
+params['model_order'] = 1
+params['poly_order'] = 3
+params['include_sine'] = True
+params['library_dim'] = library_size(params['latent_dim'], params['poly_order'], params['include_sine'], True)
+
+
+# sequential thresholding parameters
+params['sequential_thresholding'] = True
+params['coefficient_threshold'] = 0.1
+params['threshold_frequency'] = 500
+params['coefficient_mask'] = np.ones((params['library_dim'], params['latent_dim']))
+params['coefficient_initialization'] = library_size(params['latent_dim'], params['poly_order'], params['include_sine'], True)
+
+# loss function weighting
+params['loss_weight_decoder'] = 1.0
+params['loss_weight_sindy_z'] = 0.01
+params['loss_weight_sindy_x'] = 0.5
+params['loss_weight_sindy_regularization'] = 0.1
+
+params['activation'] = 'sigmoid'
+params['hdims'] = [256]
+
+# training parameters
+params['epoch_size'] = training_data['t'].size
+params['batch_size'] = 1024
+params['n_samples'] = (params['batch_size']//params['input_dim'])
+params['learning_rate'] = 1e-3
+
+params['data_path'] = os.getcwd() + '/'
+params['print_progress'] = True
+params['print_frequency'] = 100
+
+# training time cutoffs
+params['max_epochs'] = 3001
+params['refinement_epochs'] = 1001
+
+# Dropout
+params['p_dropout'] = 0.0
+params['p_dropout_threshold'] = [999, 0.3]
+# The first number is at which thresholding is the dropout activated
+# The second is the dropout probability applied
+
+# Use GPU if available
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+print("Device:",device)
+
+with torch.no_grad():
+    # Move training data data to GPU
+    training_data['x'] = (torch.from_numpy(training_data['x'])).to(device)
+    training_data['dx'] = (torch.from_numpy(training_data['dx'])).to(device)
+    training_data['ddx'] = (torch.from_numpy(training_data['ddx'])).to(device)
+
+    validation_data['x'] = torch.from_numpy(validation_data['x']).to(device)
+    validation_data['dx'] = torch.from_numpy(validation_data['dx']).to(device)
+    validation_data['ddx'] = torch.from_numpy(validation_data['ddx']).to(device)
+
+num_experiments = 1
+
+for i in range(num_experiments):
+    print('EXPERIMENT %d' % i)
+
+    params['coefficient_mask'] = np.ones((params['library_dim'], params['latent_dim']))
+
+    params['save_name'] = 'rd_' + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
+
+    results_dict = train_network(training_data, validation_data, params, device)
