@@ -6,7 +6,7 @@ Authors of the reproduction: - Diego Andía
 This repository includes the code created by a group of master students of TU Delft for the course CS4240 Deep Learning. 
 The objective of this project has been to reproduce the following paper: https://www.pnas.org/doi/suppl/10.1073/pnas.1906995116.
 The original code from the authors is posted in: https://www.pnas.org/doi/suppl/10.1073/pnas.1906995116.
-A blog-post showing the outcomes of the reproduction has been posted in:  
+A blog-post showing the outcomes of the reproduction has been posted in: https://drive.google.com/file/d/1tKi4WYd8A_qUQAwWXqPHs5u5QKtdO-zW/view?usp=sharing
 
 *Important notes: Check that the files created in Training.py are saved in the correct directory.
                   In order to run the rd (reaction diffusion) training and testing scripts you will need to run 
